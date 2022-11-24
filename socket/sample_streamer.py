@@ -16,7 +16,6 @@ socket.bind(("localhost",9090))
 socket.listen()
 while True:
     conn, addr = socket.accept()
-    print("hello")
     with conn:
         print(f"Connected by {addr}")
         g = generator(pd.read_feather("../data/anubis.feather"))
