@@ -14,7 +14,7 @@ def generator(data):
    # deltas = data.delta.values
    # data_rows = data.drop(columns=["delta"])
     for i in range(len(data)):
-        #sleep(0.5)
+        sleep(0.2)
         #sleep(deltas[i])
         yield data.iloc[i].to_json()+"\n"
         #yield data_rows.iloc[i].to_json()+"\n"
