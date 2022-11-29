@@ -6,7 +6,7 @@ from kafka import KafkaProducer
 from time import sleep
 import pandas as pd
 
-KAFKA_TOPIC = 'messages'
+KAFKA_TOPIC = 'messages_in'
 
 producer = KafkaProducer(bootstrap_servers=['localhost:9092'])
 
