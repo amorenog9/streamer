@@ -6,7 +6,9 @@ if __name__ == '__main__':
     consumer = KafkaConsumer(
         'messages_out',
         bootstrap_servers='localhost:9092',
-        auto_offset_reset='earliest'
+        #auto_offset_reset='earliest'
+        auto_offset_reset='latest'
+
     )
     for message in consumer:
         print(message.value.decode())
