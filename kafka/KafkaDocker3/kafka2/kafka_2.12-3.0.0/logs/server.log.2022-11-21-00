@@ -1,0 +1,6 @@
+[2022-11-21 00:17:08,319] INFO Creating topic kafka with configuration {} and initial partition assignment Map(0 -> ArrayBuffer(0)) (kafka.zk.AdminZkClient)
+[2022-11-21 00:17:08,333] INFO [ReplicaFetcherManager on broker 0] Removed fetcher for partitions Set(kafka-0) (kafka.server.ReplicaFetcherManager)
+[2022-11-21 00:17:08,336] INFO [LogLoader partition=kafka-0, dir=/tmp/kafka-logs] Loading producer state till offset 0 with message format version 2 (kafka.log.Log$)
+[2022-11-21 00:17:08,337] INFO Created log for partition kafka-0 in /tmp/kafka-logs/kafka-0 with properties {} (kafka.log.LogManager)
+[2022-11-21 00:17:08,338] INFO [Partition kafka-0 broker=0] No checkpointed highwatermark is found for partition kafka-0 (kafka.cluster.Partition)
+[2022-11-21 00:17:08,338] INFO [Partition kafka-0 broker=0] Log loaded for partition kafka-0 with initial high watermark 0 (kafka.cluster.Partition)
