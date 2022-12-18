@@ -10,14 +10,7 @@ WORKDIR /app
 RUN wget https://dlcdn.apache.org/zookeeper/zookeeper-3.8.0/apache-zookeeper-3.8.0-bin.tar.gz
 RUN tar -xvzf apache-zookeeper-3.8.0-bin.tar.gz
 
-
-
 COPY . /app
-
-
-WORKDIR /app/kafka_2.12-3.0.0
-
-COPY . /app/kafka_2.12-3.0.0
 
 RUN chmod +x ./start.sh
 
