@@ -1,9 +1,9 @@
-import json 
+import json
 from kafka import KafkaConsumer
 KAFKA_TOPIC = 'messages_out'
 
 if __name__ == '__main__':
-    # Kafka Consumer 
+    # Kafka Consumer
     consumer = KafkaConsumer(
         KAFKA_TOPIC,
         bootstrap_servers='localhost:9092',
