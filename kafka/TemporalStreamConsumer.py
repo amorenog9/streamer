@@ -1,6 +1,6 @@
 import json 
 from kafka import KafkaConsumer
-KAFKA_TOPIC = 'messages_from_timestamp'
+KAFKA_TOPIC = 'messages_from_timestamp_out'
 
 
 if __name__ == '__main__':
