@@ -27,6 +27,8 @@ if __name__ == '__main__':
         producer.send(KAFKA_TOPIC, line.encode()) #debemos enviar como byte[] a flink para que JsonNodeDeserializationSchema() pueda leerlo
         # block until all async messages are sent
         producer.flush()
+    while True:
+        sleep(1) # Para que no termine nunca de enviar mensajes y el fichero SparkReader funcione correctamente
 
 
         

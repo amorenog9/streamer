@@ -1,6 +1,6 @@
 import json
 from kafka import KafkaConsumer
-KAFKA_TOPIC = 'messages_out_no_memory'
+KAFKA_TOPIC = 'messages_out'
 #KAFKA_TOPIC = 'messages_out'
 
 

@@ -1,9 +1,11 @@
 from kafka import KafkaProducer, KafkaConsumer, TopicPartition
 import pyspark
 from delta import *
+from time import sleep
+
 
 KAFKA_TOPIC_IN = "messages_out_no_memory"  # Stream infinito
-KAFKA_TOPIC_OUT = 'messages_from_timestamp_in'
+KAFKA_TOPIC_OUT = 'messages_from_timestamp_out'
 broker = "localhost:9092"
 
 producer = KafkaProducer(bootstrap_servers=['localhost:9092'], api_version=(3, 0, 0))
@@ -21,6 +23,7 @@ df.show()
 
 actualTime = df.first()['actualTime']
 routeToFile = df.first()['routeToFile']
+
 
 
 # Primero enviamos al kafkaTopic los mensajes del fichero eventsFromTimestamo y luego enviamos desde el punto donde lo dejamos el stream infinito (messages_out)
@@ -48,6 +51,7 @@ def getAndProduceMessagesFromTimestap(timestamp, topic_in, topic_out):
 
     rec_in = consumer.offsets_for_times({tp: timestamp})
     consumer.seek(tp, rec_in[tp].offset)
+
 
     for msg in consumer:
         print(msg.value.decode())
