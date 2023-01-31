@@ -43,7 +43,7 @@ getAndProduceMessagesFromFile(routeToFile + "/eventsFromTimestamp.json", KAFKA_T
 
 
 # Concatenamos el stream infinito debajo de los eventos de la tabla finita
-def getAndProduceMessagesFromTimestap(timestamp, topic_in, topic_out):
+def getAndProduceMessagesFromTimestamp(timestamp, topic_in, topic_out):
     consumer = KafkaConsumer(topic_in, bootstrap_servers=broker, enable_auto_commit=True)
     consumer.poll()  # we need to read message or call dumb poll before seeking the right position
 
@@ -59,4 +59,4 @@ def getAndProduceMessagesFromTimestap(timestamp, topic_in, topic_out):
         producer.flush()
 
 
-getAndProduceMessagesFromTimestap(actualTime, KAFKA_TOPIC_IN, KAFKA_TOPIC_OUT)
+getAndProduceMessagesFromTimestamp(actualTime, KAFKA_TOPIC_IN, KAFKA_TOPIC_OUT)
