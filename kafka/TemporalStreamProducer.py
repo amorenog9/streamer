@@ -1,29 +1,34 @@
 from kafka import KafkaProducer, KafkaConsumer, TopicPartition
-import pyspark
-from delta import *
-from time import sleep
+import json
 
+from time import sleep
 
 KAFKA_TOPIC_IN = "messages_out_no_memory"  # Stream infinito
 KAFKA_TOPIC_OUT = 'messages_from_timestamp_out'
-broker = "localhost:9092"
+
+
+# Configuración de Kafka
+bootstrap_servers = 'localhost:9092'
+auto_offset_reset = 'earliest'
+enable_auto_commit = True
+group_id = 'my-group'
+value_deserializer = lambda m: json.loads(m.decode('utf-8'))
 
 producer = KafkaProducer(bootstrap_servers=['localhost:9092'], api_version=(3, 0, 0))
 
+# Abrimos JSON
+f = open('/tmp/events_from_timestamp/variables_python/variables.json')
+data = json.load(f)
 
-builder = pyspark.sql.SparkSession.builder.appName("MyApp") \
-    .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension") \
-    .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
+# Almacenamos variables
+actualTime = data['actualTime']
+routeToFile = data['routeToFile']
 
-spark = configure_spark_with_delta_pip(builder).getOrCreate()
+# Cerramos JSON
+f.close()
 
-# Obtengo de una tabla parametros que necesite de scala (timestamp y ruta del fichero)
-df = spark.read.format("delta").load("/tmp/events_from_timestamp/delta-table")  # Esta tabla se actualizara cada vez que ejecutemos SparkReaderTable.scala
-df.show()
-
-actualTime = df.first()['actualTime']
-routeToFile = df.first()['routeToFile']
-
+print(actualTime)
+print(routeToFile)
 
 
 # Primero enviamos al kafkaTopic los mensajes del fichero eventsFromTimestamo y luego enviamos desde el punto donde lo dejamos el stream infinito (messages_out)
@@ -34,8 +39,9 @@ def getAndProduceMessagesFromFile(file_path, topic_out):
     Lines = file1.readlines()
 
     for line in Lines:
-        print(line.rstrip('\n'))
-        producer.send(topic_out,line.rstrip('\n').encode())  # debemos enviar como byte[] a flink para que JsonNodeDeserializationSchema() pueda leerlo
+        # print(line.rstrip('\n'))
+        producer.send(topic_out, line.rstrip(
+            '\n').encode())  # debemos enviar como byte[] a flink para que JsonNodeDeserializationSchema() pueda leerlo
         producer.flush()
 
 
@@ -44,19 +50,30 @@ getAndProduceMessagesFromFile(routeToFile + "/eventsFromTimestamp.json", KAFKA_T
 
 # Concatenamos el stream infinito debajo de los eventos de la tabla finita
 def getAndProduceMessagesFromTimestamp(timestamp, topic_in, topic_out):
-    consumer = KafkaConsumer(topic_in, bootstrap_servers=broker, enable_auto_commit=True)
-    consumer.poll()  # we need to read message or call dumb poll before seeking the right position
 
-    tp = TopicPartition(topic_in, 0)  # partition n. 0
+    # Crear objeto KafkaConsumer
+    consumer = KafkaConsumer(
+        bootstrap_servers=bootstrap_servers,
+        auto_offset_reset=auto_offset_reset,
+        enable_auto_commit=enable_auto_commit,
+        group_id=group_id,
+        value_deserializer=value_deserializer
+    )
 
-    rec_in = consumer.offsets_for_times({tp: timestamp})
-    consumer.seek(tp, rec_in[tp].offset)
+    # Obtener el timestamp deseado
+    timestamp_ms = timestamp
 
+    # Buscar el offset del primer mensaje en el topic
+    tp = TopicPartition(topic_in, 0)
+    consumer.assign([tp])
+    consumer.seek_to_beginning(tp)
 
-    for msg in consumer:
-        print(msg.value.decode())
-        producer.send(topic_out, msg.value.decode().encode())
-        producer.flush()
+    # Consumir mensajes hasta encontrar el mensaje deseado
+    for message in consumer:
+        if message.timestamp >= timestamp_ms:
+            print(message)
+            producer.send(topic_out, value=message)
+            producer.flush()
 
 
 getAndProduceMessagesFromTimestamp(actualTime, KAFKA_TOPIC_IN, KAFKA_TOPIC_OUT)

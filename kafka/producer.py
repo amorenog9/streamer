@@ -14,8 +14,8 @@ def generator(data):
    # deltas = data.delta.values
    # data_rows = data.drop(columns=["delta"])
     for i in range(len(data)):
-        sleep(0.3) #sleep(deltas[i])
-        yield data.iloc[i].to_json()+"\n" #Por defecto on date_format = 'epoch' -> 1484856900000 (epoch milliseconds)
+        sleep(0.5)  #sleep(deltas[i])
+        yield data.iloc[i].to_json()+"\n"  #Por defecto on date_format = 'epoch' -> 1484856900000 (epoch milliseconds)
         #yield dta.iloc[i].to_json(date_format='iso')+"\n" #Con date_format = 'iso' -> "2017-01-19T20:15:00.000"
         #yield data_rows.iloc[i].to_json()+"\n"
 
@@ -28,7 +28,7 @@ if __name__ == '__main__':
         # block until all async messages are sent
         producer.flush()
     while True:
-        sleep(1) # Para que no termine nunca de enviar mensajes y el fichero SparkReaderTable funcione correctamente
+        sleep(1)  # Para que no termine nunca de enviar mensajes y el fichero SparkReaderTable funcione correctamente
 
 
         
