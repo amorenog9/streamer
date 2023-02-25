@@ -72,7 +72,8 @@ def getAndProduceMessagesFromTimestamp(timestamp, topic_in, topic_out):
     for message in consumer:
         if message.timestamp >= timestamp_ms:
             print(message)
-            producer.send(topic_out, value=message)
+            message_json = json.dumps(message.value) # convert dict to JSON string
+            producer.send(topic_out, value=message_json.encode('utf-8'))
             producer.flush()
 
 
