@@ -23,12 +23,14 @@ data = json.load(f)
 # Almacenamos variables
 actualTime = data['actualTime']
 routeToFile = data['routeToFile']
+selectedID = data['selectedID']
 
 # Cerramos JSON
 f.close()
 
 print(actualTime)
 print(routeToFile)
+print(selectedID) # puede ser "" o "522332-5123-..."
 
 
 # Primero enviamos al kafkaTopic los mensajes del fichero eventsFromTimestamo y luego enviamos desde el punto donde lo dejamos el stream infinito (messages_out)
@@ -49,7 +51,8 @@ getAndProduceMessagesFromFile(routeToFile + "/eventsFromTimestamp.json", KAFKA_T
 
 
 # Concatenamos el stream infinito debajo de los eventos de la tabla finita
-def getAndProduceMessagesFromTimestamp(timestamp, topic_in, topic_out):
+# Si hay condicion de filtrado por ID, solo tenemos que producir los mensajes de ese ID
+def getAndProduceMessagesFromTimestamp(timestamp, topic_in, topic_out, selectedID):
 
     # Crear objeto KafkaConsumer
     consumer = KafkaConsumer(
@@ -69,12 +72,19 @@ def getAndProduceMessagesFromTimestamp(timestamp, topic_in, topic_out):
     consumer.seek_to_beginning(tp)
 
     # Consumir mensajes hasta encontrar el mensaje deseado
-    for message in consumer:
-        if message.timestamp >= timestamp_ms:
-            print(message)
-            message_json = json.dumps(message.value) # convert dict to JSON string
-            producer.send(topic_out, value=message_json.encode('utf-8'))
-            producer.flush()
+    if (selectedID == ""): # No se filtra por ID
+        for message in consumer:
+            if message.timestamp >= timestamp_ms:
+                #print(message.value)
+                message_json = json.dumps(message.value) # convert dict to JSON string
+                producer.send(topic_out, value=message_json.encode('utf-8'))
+                producer.flush()
+    else: #Condicion para filtrar por ID si el usuario ha elegido uno concreto
+        for message in consumer:
+            if ((message.timestamp >= timestamp_ms) and (message.value['id'] == selectedID)):
+                #print(message.value)
+                message_json = json.dumps(message.value) # convert dict to JSON string
+                producer.send(topic_out, value=message_json.encode('utf-8'))
+                producer.flush()
 
-
-getAndProduceMessagesFromTimestamp(actualTime, KAFKA_TOPIC_IN, KAFKA_TOPIC_OUT)
+getAndProduceMessagesFromTimestamp(actualTime, KAFKA_TOPIC_IN, KAFKA_TOPIC_OUT, selectedID)
