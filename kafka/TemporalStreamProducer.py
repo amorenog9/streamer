@@ -24,6 +24,7 @@ data = json.load(f)
 actualTime = data['actualTime']
 routeToFile = data['routeToFile']
 selectedID = data['selectedID']
+timeStampValue = data['timeStampValue']
 
 # Cerramos JSON
 f.close()
@@ -31,6 +32,8 @@ f.close()
 print(actualTime)
 print(routeToFile)
 print(selectedID) # puede ser "" o "522332-5123-..."
+print(timeStampValue) # puede ser "" o "522332-5123-..."
+
 
 
 # Primero enviamos al kafkaTopic los mensajes del fichero eventsFromTimestamo y luego enviamos desde el punto donde lo dejamos el stream infinito (messages_out)
@@ -52,7 +55,7 @@ getAndProduceMessagesFromFile(routeToFile + "/eventsFromTimestamp.json", KAFKA_T
 
 # Concatenamos el stream infinito debajo de los eventos de la tabla finita
 # Si hay condicion de filtrado por ID, solo tenemos que producir los mensajes de ese ID
-def getAndProduceMessagesFromTimestamp(timestamp, topic_in, topic_out, selectedID):
+def getAndProduceMessagesFromTimestamp(actualTime, topic_in, topic_out, selectedID, timeStampValue):
 
     # Crear objeto KafkaConsumer
     consumer = KafkaConsumer(
@@ -64,7 +67,6 @@ def getAndProduceMessagesFromTimestamp(timestamp, topic_in, topic_out, selectedI
     )
 
     # Obtener el timestamp deseado
-    timestamp_ms = timestamp
 
     # Buscar el offset del primer mensaje en el topic
     tp = TopicPartition(topic_in, 0)
@@ -74,17 +76,17 @@ def getAndProduceMessagesFromTimestamp(timestamp, topic_in, topic_out, selectedI
     # Consumir mensajes hasta encontrar el mensaje deseado
     if (selectedID == "no-id"): # No se filtra por ID
         for message in consumer:
-            if message.timestamp >= timestamp_ms:
-                #print(message.value)
+            if ((message.timestamp >= actualTime) and (message.value['date_event'] >= timeStampValue)):
+                print(message.value['date_event'])
                 message_json = json.dumps(message.value) # convert dict to JSON string
                 producer.send(topic_out, value=message_json.encode('utf-8'))
                 producer.flush()
     else: #Condicion para filtrar por ID si el usuario ha elegido uno concreto
         for message in consumer:
-            if ((message.timestamp >= timestamp_ms) and (message.value['id'] == selectedID)):
-                #print(message.value)
+            if ((message.timestamp >= actualTime) and (message.value['id'] == selectedID) and (message.value['date_event'] >= timeStampValue)):
+                print(message.value)
                 message_json = json.dumps(message.value) # convert dict to JSON string
                 producer.send(topic_out, value=message_json.encode('utf-8'))
                 producer.flush()
 
-getAndProduceMessagesFromTimestamp(actualTime, KAFKA_TOPIC_IN, KAFKA_TOPIC_OUT, selectedID)
+getAndProduceMessagesFromTimestamp(actualTime, KAFKA_TOPIC_IN, KAFKA_TOPIC_OUT, selectedID, timeStampValue)
