@@ -72,7 +72,7 @@ def getAndProduceMessagesFromTimestamp(timestamp, topic_in, topic_out, selectedI
     consumer.seek_to_beginning(tp)
 
     # Consumir mensajes hasta encontrar el mensaje deseado
-    if (selectedID == ""): # No se filtra por ID
+    if (selectedID == "no-id"): # No se filtra por ID
         for message in consumer:
             if message.timestamp >= timestamp_ms:
                 #print(message.value)
