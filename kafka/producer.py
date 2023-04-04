@@ -20,7 +20,8 @@ def generator(data):
         #yield data_rows.iloc[i].to_json()+"\n"
 
 if __name__ == '__main__':
-    g = generator(pd.read_feather("../data/anubisShorted_shortedSimple_3columns.feather"))
+    #g = generator(pd.read_feather("../data/anubisShorted_shortedSimple_3columns.feather"))
+    g = generator(pd.read_feather("../data/anubis.feather"))
     for line in g:
         #print(f'Producing message @ {datetime.now()} | Message = {str(line)}')
         print(line)
