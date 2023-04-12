@@ -1,0 +1,95 @@
+version: '3'
+services:
+  # zookeeper:
+  #   image: 'bitnami/zookeeper:3.8.0'
+  #   container_name: zookeeper
+  #   ports:
+  #     - '2181:2181'
+  #   environment:
+  #     - ALLOW_ANONYMOUS_LOGIN=yes
+
+  # kafka:
+  #   image: 'bitnami/kafka:3.0.0'
+  #   container_name: kafka
+  #   ports:
+  #     - '9092:9092'
+  #   environment:
+  #     - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+  #     - ALLOW_PLAINTEXT_LISTENER=yes
+  #     - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092
+  #   depends_on:
+  #     - zookeeper
+#########################################################################
+  zookeeper:
+    container_name: zookeeper
+    build: zookeeper/.
+    ports: 
+      - "2181:2181"
+    network_mode: host
+  kafka:
+    container_name: kafka
+    build: kafka/.
+    ports:
+      - "9092:9092"
+    network_mode: host
+    depends_on:
+      - zookeeper
+  kafka2:
+    container_name: kafka2
+    build: kafka2/.
+    ports:
+      - "9092:9092"
+    network_mode: host
+    depends_on:
+      - kafka
+
+  flink:
+    container_name: flink
+    build: flink/.
+    ports:
+      - "8081:8081"
+    network_mode: host 
+    depends_on:
+      - kafka2
+  
+  sparkwriter:
+    container_name: sparkwriter
+    build: sparkWriter/.
+    network_mode: host 
+    depends_on:
+      - flink
+  
+  # nodeserver:
+  #   container_name: nodeserver
+  #   build: nodeServer/.
+  #   ports:
+  #     - "3001:3001"
+  #   network_mode: host 
+  #   depends_on:
+  #      - sparkwriter
+
+  # python:
+  #   container_name: python
+  #   build: python/.
+  #   network_mode: host 
+  #   depends_on:
+  #      - nodeserver
+
+  # sparkreader:
+  #   container_name: sparkreader
+  #   build: sparkReader/.
+  #   network_mode: host 
+  #   depends_on:
+  #      - nodeserver
+
+  # dashboard:
+  #   container_name: dashboard
+  #   build: dashboard/.
+  #   ports:
+  #     - "3000:3000"
+  #   network_mode: host 
+  #   depends_on:
+  #      - nodeserver
+
+
+
