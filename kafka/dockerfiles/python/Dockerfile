@@ -6,14 +6,10 @@ RUN apt-get upgrade -y
 
 
 # Clonar repositorio
-RUN	git clone https://github.com/amorenog9/streamingProject.git
+RUN git clone https://github.com/amorenog9/streamer.git
 
-# Creacion de jar
-WORKDIR /app/streamingProject
-RUN sbt clean
-RUN sbt assembly
-WORKDIR /app/streamingProject/target/scala-2.11
-RUN chmod 777 streamingProject-assembly-0.1.jar
+CMD ["sleep", "infinity"]
+
 
 
 

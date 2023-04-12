@@ -1,5 +1,8 @@
 FROM node:18.14.0
 
+RUN apt-get update && \
+    apt-get install -y docker.io
+
 WORKDIR /app
 
 # Clonar repositorio

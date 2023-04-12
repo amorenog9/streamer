@@ -1,5 +1,8 @@
 FROM openjdk:8
 
+RUN apt-get update && \
+    apt-get install -y docker.io
+
 WORKDIR /app
 
 # SBT - instalacion
@@ -28,5 +31,8 @@ RUN chmod 777 streamingProject-assembly-0.1.jar
 
 # Iniciamos cluster flink y ejecutamos Job
 #CMD ./spark-submit --class es.upm.dit.KafkaSparkWriter --master local[*] --packages org.apache.spark:spark-sql-kafka-0-10_2.11:2.4.8 --jars /app/streamingProject/bibliotecas_jars/delta-core_2.11-0.6.1.jar /app/streamingProject/target/scala-2.11/streamingProject-assembly-0.1.jar 
+WORKDIR /app
+CMD ["sleep", "infinity"]
+
 
 
