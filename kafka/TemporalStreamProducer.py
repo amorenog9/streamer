@@ -17,7 +17,7 @@ value_deserializer = lambda m: json.loads(m.decode('utf-8'))
 producer = KafkaProducer(bootstrap_servers=['localhost:9092'], api_version=(3, 0, 0))
 
 # Abrimos JSON
-f = open('/tmp/events_from_timestamp/variables_python/variables.json')
+f = open('/tmp/events/events_from_timestamp/variables_python/variables.json')
 data = json.load(f)
 
 # Almacenamos variables
