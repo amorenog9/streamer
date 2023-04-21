@@ -24,6 +24,7 @@ data = json.load(f)
 actualTime = data['actualTime']
 routeToFile = data['routeToFile']
 selectedID = data['selectedID']
+selectedIDArray = selectedID.split(",")
 timeStampValue = data['timeStampValue']
 
 # Cerramos JSON
@@ -32,6 +33,7 @@ f.close()
 print(actualTime)
 print(routeToFile)
 print(selectedID) # puede ser "" o "522332-5123-..."
+print(selectedIDArray)
 print(timeStampValue) # puede ser "" o "522332-5123-..."
 
 
@@ -83,7 +85,7 @@ def getAndProduceMessagesFromTimestamp(actualTime, topic_in, topic_out, selected
                 producer.flush()
     else: #Condicion para filtrar por ID si el usuario ha elegido uno concreto
         for message in consumer:
-            if ((message.timestamp >= actualTime) and (message.value['id'] == selectedID) and (message.value['date_event'] >= timeStampValue)):
+            if ((message.timestamp >= actualTime) and (message.value['id'] in selectedIDArray) and (message.value['date_event'] >= timeStampValue)):
                 print(message.value)
                 message_json = json.dumps(message.value) # convert dict to JSON string
                 producer.send(topic_out, value=message_json.encode('utf-8'))
