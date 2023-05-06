@@ -1,7 +1,5 @@
 FROM node:18.14.0
 
-RUN apt-get update && \
-    apt-get install -y docker.io
 
 WORKDIR /app
 
@@ -14,8 +12,8 @@ WORKDIR /app/eventsdashboard
 # Instalacion de dependencias
 RUN npm install
 
-# Iniciamos cluster flink y ejecutamos Job
-CMD node server.js
+# Esperamos 10segundos para que los topics esten creados e iniciamos el servidor
+CMD sleep 10 && node server.js
 
 
 

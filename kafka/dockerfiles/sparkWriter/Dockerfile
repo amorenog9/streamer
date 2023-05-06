@@ -10,9 +10,13 @@ RUN apt-get update
 RUN apt-get install sbt
 
 
+RUN apt-get install sudo -y
+
+
 # Obtener spark
-RUN wget https://archive.apache.org/dist/spark/spark-2.4.8/spark-2.4.8-bin-hadoop2.7.tgz 
-RUN tar -xzvf spark-2.4.8-bin-hadoop2.7.tgz
+#RUN wget https://archive.apache.org/dist/spark/spark-2.4.8/spark-2.4.8-bin-hadoop2.7.tgz 
+#RUN tar -xzvf spark-2.4.8-bin-hadoop2.7.tgz
+COPY . .
 
 # Clonar repositorio
 RUN	git clone https://github.com/amorenog9/streamingProject.git
@@ -27,7 +31,9 @@ RUN chmod 777 streamingProject-assembly-0.1.jar
 # Trabajar dentro del repositorio de flink
 WORKDIR /app/spark-2.4.8-bin-hadoop2.7/bin
 
-# Iniciamos cluster flink y ejecutamos Job
-CMD ./spark-submit --class es.upm.dit.KafkaSparkWriter --master local[*] --packages org.apache.spark:spark-sql-kafka-0-10_2.11:2.4.8 --jars /app/streamingProject/bibliotecas_jars/delta-core_2.11-0.6.1.jar /app/streamingProject/target/scala-2.11/streamingProject-assembly-0.1.jar 
+# Enviamos job a spark, esperamos 60 segundos para dar margen a los workers a que se creen (podría no ser necesario, pero no está de más), le damos solo 1 core
 
+#CMD ./spark-submit --class es.upm.dit.KafkaSparkWriter --master local[*] --packages org.apache.spark:spark-sql-kafka-0-10_2.11:2.4.8 --jars /app/streamingProject/bibliotecas_jars/delta-core_2.11-0.6.1.jar /app/streamingProject/target/scala-2.11/streamingProject-assembly-0.1.jar 
+
+CMD sleep 60 && ./spark-submit --total-executor-cores $NUMBER_CORES --class es.upm.dit.KafkaSparkWriter --master spark://$SPARK_HOST:7077 --packages org.apache.spark:spark-sql-kafka-0-10_2.11:2.4.8 --jars /app/streamingProject/bibliotecas_jars/delta-core_2.11-0.6.1.jar /app/streamingProject/target/scala-2.11/streamingProject-assembly-0.1.jar 
 

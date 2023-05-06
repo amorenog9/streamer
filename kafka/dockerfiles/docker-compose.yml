@@ -1,95 +1,149 @@
+#https://hub.docker.com/repository/docker/amorenog9/dockerimagestfm/general
 version: '3'
 services:
-  # zookeeper:
-  #   image: 'bitnami/zookeeper:3.8.0'
-  #   container_name: zookeeper
-  #   ports:
-  #     - '2181:2181'
-  #   environment:
-  #     - ALLOW_ANONYMOUS_LOGIN=yes
-
-  # kafka:
-  #   image: 'bitnami/kafka:3.0.0'
-  #   container_name: kafka
-  #   ports:
-  #     - '9092:9092'
-  #   environment:
-  #     - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
-  #     - ALLOW_PLAINTEXT_LISTENER=yes
-  #     - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092
-  #   depends_on:
-  #     - zookeeper
-#########################################################################
   zookeeper:
     container_name: zookeeper
-    build: zookeeper/.
+#    build: zookeeper/.
+    image: amorenog9/dockerimagestfm:zookeeper
+    network_mode: host
     ports: 
       - "2181:2181"
-    network_mode: host
   kafka:
     container_name: kafka
-    build: kafka/.
+#    build: kafka/.
+    image: amorenog9/dockerimagestfm:kafka
     ports:
       - "9092:9092"
+      - "5004:5004"
     network_mode: host
     depends_on:
       - zookeeper
   kafka2:
     container_name: kafka2
-    build: kafka2/.
+    #build: kafka2/.
+    image: amorenog9/dockerimagestfm:kafka2
     ports:
       - "9092:9092"
     network_mode: host
     depends_on:
       - kafka
 
-  # flink:
-  #   container_name: flink
-  #   build: flink/.
-  #   ports:
-  #     - "8081:8081"
-  #   network_mode: host 
-  #   depends_on:
-  #     - kafka2
-  
-  # sparkwriter:
-  #   container_name: sparkwriter
-  #   build: sparkWriter/.
-  #   network_mode: host 
-  #   depends_on:
-  #     - flink
-  
-  nodeserver:
-    container_name: nodeserver
-    build: nodeServer/.
+  spark:
+#    build: spark-master/.
+    image: amorenog9/dockerimagestfm:sparkmaster
+    container_name: spark-master
+     #ports:
+      #- '8080:8080'
+      #- "7077:7077"
+    network_mode: host
+    volumes:
+      - bbdd:/tmp/events
+    environment:
+      - SPARK_HOST=127.17.0.6 # Configurada en spark-env.sh
+
+  worker1:
+#    build: spark-worker/.
+    image: amorenog9/dockerimagestfm:sparkworker
+    container_name: spark-worker1
+    # ports:
+      #- '8081:8080'
+      #- "7000:7000"
+    network_mode: host
+    volumes:
+      - bbdd:/tmp/events
+    environment:
+      - SPARK_HOST=127.17.0.6 # Configurada en spark-env.sh
+    depends_on:
+      - spark
+
+  worker2:
+#    build: spark-worker/.
+    image: amorenog9/dockerimagestfm:sparkworker
+    container_name: spark-worker2
+    # ports:
+      #- '8082:8080'
+      #- "7001:7000"
+    network_mode: host
+    volumes:
+      - bbdd:/tmp/events
+    environment:
+      - SPARK_HOST=127.17.0.6 # Configurada en spark-env.sh
+    depends_on:
+      - spark
+
+  flink:
+    container_name: flink
+    #build: flink/.
+    image: amorenog9/dockerimagestfm:flink
     ports:
-      - "3001:3001"
+      - "7080:7080"
     network_mode: host 
     depends_on:
-       - kafka2
-
+      - kafka2
+  
+  sparkwriter:
+    container_name: sparkwriter
+#    build: sparkWriter/.
+    image: amorenog9/dockerimagestfm:sparkwriter
+    network_mode: host 
+    environment:
+      - SPARK_HOST=127.17.0.6 # Configurada en spark-env.sh
+      - NUMBER_CORES=3
+    volumes:
+      - bbdd:/tmp/events
+    depends_on:
+      - kafka2
+      - spark
+      - flink
+  
   python:
     container_name: python
-    build: python/.
-    network_mode: host 
+    #build: python/.
+    image: amorenog9/dockerimagestfm:python    
+    network_mode: host
+    ports:
+      - "5005:5005"  
+    volumes:
+      - bbdd:/tmp/events
     depends_on:
-       - nodeserver
+      - kafka2
 
   sparkreader:
     container_name: sparkreader
-    build: sparkReader/.
+#    build: sparkReader/.
+    image: amorenog9/dockerimagestfm:sparkreader
     network_mode: host 
+    ports:
+      - "5006:5006"  
+    volumes:
+      - bbdd:/tmp/events
     depends_on:
-       - nodeserver
+      - spark
+      - python
+
+  nodeserver:
+    container_name: nodeserver
+    #build: nodeServer/.
+    image: amorenog9/dockerimagestfm:nodeserver
+    network_mode: host 
+    ports:
+      - "3001:3001"
+    depends_on:
+      - kafka2
+      - sparkreader
 
   dashboard:
     container_name: dashboard
-    build: dashboard/.
+#    build: dashboard/.
+    image: amorenog9/dockerimagestfm:dashboard
+    network_mode: host 
     ports:
       - "3000:3000"
-    network_mode: host 
     depends_on:
-       - nodeserver
+      - nodeserver
+
+volumes:
+  bbdd:
 
 
 
