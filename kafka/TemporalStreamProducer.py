@@ -8,13 +8,13 @@ KAFKA_TOPIC_OUT = 'messages_from_timestamp_out'
 
 
 # Configuración de Kafka
-bootstrap_servers = 'localhost:9092'
+bootstrap_servers = 'kafka:9092'
 auto_offset_reset = 'earliest'
 enable_auto_commit = True
 group_id = 'my-group'
 value_deserializer = lambda m: json.loads(m.decode('utf-8'))
 
-producer = KafkaProducer(bootstrap_servers=['localhost:9092'], api_version=(3, 0, 0))
+producer = KafkaProducer(bootstrap_servers=['kafka:9092'], api_version=(3, 0, 0))
 
 # Abrimos JSON
 f = open('/tmp/events/events_from_timestamp/variables_python/variables.json')

@@ -1,93 +1,63 @@
 #https://hub.docker.com/repository/docker/amorenog9/dockerimagestfm/general
 version: '3'
 services:
-  zookeeper:
-    container_name: zookeeper
-#    build: zookeeper/.
-    image: amorenog9/dockerimagestfm:zookeeper
-    network_mode: host
-    ports: 
-      - "2181:2181"
-  kafka:
+  kafkaandzookeeper:
     container_name: kafka
-#    build: kafka/.
-    image: amorenog9/dockerimagestfm:kafka
+    build: kafkaandzookeeper/.
     ports:
-      - "9092:9092"
-      - "5004:5004"
-    network_mode: host
-    depends_on:
-      - zookeeper
-  kafka2:
-    container_name: kafka2
-    #build: kafka2/.
-    image: amorenog9/dockerimagestfm:kafka2
-    ports:
-      - "9092:9092"
-    network_mode: host
-    depends_on:
-      - kafka
+      - "9092:9092" # para enviar los mensajes desde el host y para verificar que se envian los mensajes
+      - "5004:5004" # Exponemos el puerto del servidor flask por si quieremos ver los topics
 
   spark:
-#    build: spark-master/.
-    image: amorenog9/dockerimagestfm:sparkmaster
-    container_name: spark-master
-     #ports:
-      #- '8080:8080'
-      #- "7077:7077"
-    network_mode: host
+    build: spark-master/.
+    container_name: spark
+    ports:
+      - "8080:8080" # Exponemos puerto 8080 para ver dashboard de spark en host
+      - "7077:7077"
     volumes:
       - bbdd:/tmp/events
     environment:
-      - SPARK_HOST=127.17.0.6 # Configurada en spark-env.sh
+      - SPARK_HOST=spark # Configurada en spark-env.sh
 
   worker1:
-#    build: spark-worker/.
-    image: amorenog9/dockerimagestfm:sparkworker
+    build: spark-worker/.
     container_name: spark-worker1
     # ports:
       #- '8081:8080'
       #- "7000:7000"
-    network_mode: host
     volumes:
       - bbdd:/tmp/events
     environment:
-      - SPARK_HOST=127.17.0.6 # Configurada en spark-env.sh
+      - SPARK_HOST=spark # Configurada en spark-env.sh
     depends_on:
       - spark
 
   worker2:
-#    build: spark-worker/.
-    image: amorenog9/dockerimagestfm:sparkworker
+    build: spark-worker/.
     container_name: spark-worker2
     # ports:
       #- '8082:8080'
       #- "7001:7000"
-    network_mode: host
     volumes:
       - bbdd:/tmp/events
     environment:
-      - SPARK_HOST=127.17.0.6 # Configurada en spark-env.sh
+      - SPARK_HOST=spark # Configurada en spark-env.sh
     depends_on:
       - spark
 
   flink:
     container_name: flink
-    #build: flink/.
-    image: amorenog9/dockerimagestfm:flink
+    build: flink/.
     ports:
-      - "7080:7080"
-    network_mode: host 
+      - "7080:7080"  # Exponemos puerto 7080 para ver dashboard de flink en host
     depends_on:
       - kafka2
   
   sparkwriter:
     container_name: sparkwriter
-#    build: sparkWriter/.
-    image: amorenog9/dockerimagestfm:sparkwriter
-    network_mode: host 
+    build: sparkWriter/.
     environment:
-      - SPARK_HOST=127.17.0.6 # Configurada en spark-env.sh
+      - SPARK_HOST=spark # Configurada en spark-env.sh
       - NUMBER_CORES=3
     volumes:
       - bbdd:/tmp/events
@@ -98,9 +68,7 @@ services:
   
   python:
     container_name: python
-    #build: python/.
-    image: amorenog9/dockerimagestfm:python    
-    network_mode: host
+    build: python/.
     ports:
       - "5005:5005"  
     volumes:
@@ -110,9 +78,7 @@ services:
 
   sparkreader:
     container_name: sparkreader
-#    build: sparkReader/.
-    image: amorenog9/dockerimagestfm:sparkreader
-    network_mode: host 
+    build: sparkReader/.
     ports:
       - "5006:5006"  
     volumes:
@@ -123,9 +89,7 @@ services:
 
   nodeserver:
     container_name: nodeserver
-    #build: nodeServer/.
-    image: amorenog9/dockerimagestfm:nodeserver
-    network_mode: host 
+    build: nodeServer/.
     ports:
       - "3001:3001"
     depends_on:
@@ -134,11 +98,9 @@ services:
 
   dashboard:
     container_name: dashboard
-#    build: dashboard/.
-    image: amorenog9/dockerimagestfm:dashboard
-    network_mode: host 
+    build: dashboard/.
     ports:
-      - "3000:3000"
+      - "3000:3000" # Exponemos puerto 3000 para ver dashboard en host
     depends_on:
       - nodeserver
 
