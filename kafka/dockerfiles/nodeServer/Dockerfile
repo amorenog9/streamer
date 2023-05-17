@@ -1,5 +1,6 @@
 FROM node:18.14.0
 
+EXPOSE 3001
 
 WORKDIR /app
 
@@ -13,7 +14,7 @@ WORKDIR /app/eventsdashboard
 RUN npm install
 
 # Esperamos 10segundos para que los topics esten creados e iniciamos el servidor
-CMD sleep 10 && node server.js
+CMD sleep 30 && node server.js
 
 
 

@@ -5,17 +5,21 @@ services:
     container_name: kafka
     build: kafkaandzookeeper/.
     ports:
-      - "9092:9092" # para enviar los mensajes desde el host y para verificar que se envian los mensajes
+     # - "9092:9092" # para enviar los mensajes desde el host y para verificar que se envian los mensajes
       - "5004:5004" # Exponemos el puerto del servidor flask por si quieremos ver los topics
+    networks:
+      - mynetwork
 
   spark:
     build: spark-master/.
     container_name: spark
     ports:
       - "8080:8080" # Exponemos puerto 8080 para ver dashboard de spark en host
-      - "7077:7077"
+      #- "7077:7077"
     volumes:
       - bbdd:/tmp/events
+    networks:
+      - mynetwork
     environment:
       - SPARK_HOST=spark # Configurada en spark-env.sh
 
@@ -29,6 +33,8 @@ services:
       - bbdd:/tmp/events
     environment:
       - SPARK_HOST=spark # Configurada en spark-env.sh
+    networks:
+      - mynetwork
     depends_on:
       - spark
 
@@ -42,6 +48,8 @@ services:
       - bbdd:/tmp/events
     environment:
       - SPARK_HOST=spark # Configurada en spark-env.sh
+    networks:
+      - mynetwork
     depends_on:
       - spark
 
@@ -50,6 +58,8 @@ services:
     build: flink/.
     ports:
       - "7080:7080"  # Exponemos puerto 7080 para ver dashboard de flink en host
+    networks:
+      - mynetwork
     depends_on:
       - kafkaandzookeeper
   
@@ -61,6 +71,8 @@ services:
       - NUMBER_CORES=3
     volumes:
       - bbdd:/tmp/events
+    networks:
+      - mynetwork
     depends_on:
       - spark
       - flink
@@ -73,6 +85,8 @@ services:
       - "5005:5005"  
     volumes:
       - bbdd:/tmp/events
+    networks:
+      - mynetwork
     depends_on:
       - kafkaandzookeeper
 
@@ -83,6 +97,8 @@ services:
       - "5006:5006"  
     volumes:
       - bbdd:/tmp/events
+    networks:
+      - mynetwork
     depends_on:
       - spark
       - python
@@ -92,6 +108,9 @@ services:
     build: nodeServer/.
     ports:
       - "3001:3001"
+    networks:
+      mynetwork:
+        ipv4_address: 192.168.64.17 #necesario para fetch(http://noderserver:3001/mess...) => fetch(http://192.168.64.17:3001/mess...)
     depends_on:
       - kafkaandzookeeper
       - sparkreader
@@ -101,11 +120,33 @@ services:
     build: dashboard/.
     ports:
       - "3000:3000" # Exponemos puerto 3000 para ver dashboard en host
+    networks:
+      - mynetwork
     depends_on:
       - nodeserver
 
+  messagemanager:
+    container_name: messagemanager
+    build: messagemanager/.
+    ports:
+      - "5007:5007"  
+    networks:
+      mynetwork:
+        ipv4_address: 192.168.64.20 # le ponemos una ip fija para dirigirnos directamente a la peticion curl
+    depends_on:
+      - kafkaandzookeeper
+      
+
 volumes:
   bbdd:
+
+networks:
+  mynetwork:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 192.168.64.0/24
 
 
 
