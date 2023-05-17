@@ -8,7 +8,7 @@ import pandas as pd
 
 KAFKA_TOPIC = 'messages_in'
 
-producer = KafkaProducer(bootstrap_servers=['localhost:9092'], api_version=(3, 0, 0))
+producer = KafkaProducer(bootstrap_servers=['kafka:9092'], api_version=(3, 0, 0))
 
 def generator(data):
    # deltas = data.delta.values

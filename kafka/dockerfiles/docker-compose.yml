@@ -51,7 +51,7 @@ services:
     ports:
       - "7080:7080"  # Exponemos puerto 7080 para ver dashboard de flink en host
     depends_on:
-      - kafka2
+      - kafkaandzookeeper
   
   sparkwriter:
     container_name: sparkwriter
@@ -62,9 +62,9 @@ services:
     volumes:
       - bbdd:/tmp/events
     depends_on:
-      - kafka2
       - spark
       - flink
+      - kafkaandzookeeper
   
   python:
     container_name: python
@@ -74,7 +74,7 @@ services:
     volumes:
       - bbdd:/tmp/events
     depends_on:
-      - kafka2
+      - kafkaandzookeeper
 
   sparkreader:
     container_name: sparkreader
@@ -93,7 +93,7 @@ services:
     ports:
       - "3001:3001"
     depends_on:
-      - kafka2
+      - kafkaandzookeeper
       - sparkreader
 
   dashboard:
