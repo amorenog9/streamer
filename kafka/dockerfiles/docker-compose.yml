@@ -147,6 +147,17 @@ services:
     depends_on:
       - kafkaandzookeeper
 
+  # Kafka UI
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    ports:
+      - "9080:8080"
+    networks:
+      - mynetwork
+    environment:
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: kafka:2181
+
 volumes:
   bbdd:
 
