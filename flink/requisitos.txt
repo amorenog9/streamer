@@ -1,1 +1,0 @@
-Si el despliegue se quiere hacer sin ejecutar la imagen de Docker Hub, es necesario descargar la carpeta Flink en el ordenador
