@@ -1,0 +1,165 @@
+#https://hub.docker.com/repository/docker/amorenog9/dockerimagestfm/general
+version: '3'
+services:
+  kafkaandzookeeper:
+    container_name: kafka
+    image: amorenog9/dockerimagestfm:kafka
+    #build: kafkaandzookeeper/.
+    ports:
+      - "5004:5004" 
+    networks:
+      - mynetwork
+
+  spark:
+    #build: spark-master/.
+    container_name: spark
+    image: amorenog9/dockerimagestfm:sparkmaster    
+    ports:
+      - "8080:8080" 
+    volumes:
+      - bbdd:/tmp/events
+    networks:
+      - mynetwork
+    environment:
+      - SPARK_HOST=spark # Configurada en spark-env.sh
+
+  worker1:
+    #build: spark-worker/.
+    container_name: spark-worker1
+    image: amorenog9/dockerimagestfm:sparkworker    
+    volumes:
+      - bbdd:/tmp/events
+    environment:
+      - SPARK_HOST=spark # Configurada en spark-env.sh
+    networks:
+      - mynetwork
+    depends_on:
+      - spark
+
+  worker2:
+    #build: spark-worker/.
+    container_name: spark-worker2
+    image: amorenog9/dockerimagestfm:sparkworker
+    volumes:
+      - bbdd:/tmp/events
+    environment:
+      - SPARK_HOST=spark # Configurada en spark-env.sh
+    networks:
+      - mynetwork
+    depends_on:
+      - spark
+
+  flink:
+    container_name: flink
+    #build: flink/.
+    image: amorenog9/dockerimagestfm:flink
+    ports:
+      - "7080:7080"  # Exponemos puerto 7080 para ver dashboard de flink en host
+    networks:
+      - mynetwork
+    depends_on:
+      - kafkaandzookeeper
+  
+  sparkwriter:
+    container_name: sparkwriter
+    #build: sparkWriter/.
+    image: amorenog9/dockerimagestfm:sparkwriter    
+    environment:
+      - SPARK_HOST=spark # Configurada en spark-env.sh
+      - NUMBER_CORES=3
+    volumes:
+      - bbdd:/tmp/events
+    networks:
+      - mynetwork
+    depends_on:
+      - spark
+      - flink
+      - kafkaandzookeeper
+  
+  python:
+    container_name: python
+    image: amorenog9/dockerimagestfm:python
+    #build: python/.
+    ports:
+      - "5005:5005"  
+    volumes:
+      - bbdd:/tmp/events
+    networks:
+      - mynetwork
+    depends_on:
+      - kafkaandzookeeper
+
+  sparkreader:
+    container_name: sparkreader
+    #build: sparkReader/.
+    image: amorenog9/dockerimagestfm:sparkreader    
+    ports:
+      - "5006:5006"  
+    volumes:
+      - bbdd:/tmp/events
+    networks:
+      - mynetwork
+    depends_on:
+      - spark
+      - python
+
+  nodeserver:
+    container_name: nodeserver
+    image: amorenog9/dockerimagestfm:nodeserver    
+    #build: nodeServer/.
+    ports:
+      - "3001:3001"
+    networks:
+      mynetwork:
+        ipv4_address: 192.168.64.17 
+    depends_on:
+      - kafkaandzookeeper
+      - sparkreader
+
+  dashboard:
+    container_name: dashboard
+    #build: dashboard/.
+    image: amorenog9/dockerimagestfm:dashboard
+    ports:
+      - "3000:3000" # Exponemos puerto 3000 para ver dashboard en host
+    networks:
+      - mynetwork
+    depends_on:
+      - nodeserver
+
+  messagemanager:
+    container_name: messagemanager
+    image: amorenog9/dockerimagestfm:messagemanager
+    #build: messagemanager/.
+    ports:
+      - "5007:5007"  
+    networks:
+      mynetwork:
+        ipv4_address: 192.168.64.20 # le ponemos una ip fija para dirigirnos directamente a la peticion curl
+    depends_on:
+      - kafkaandzookeeper
+
+  # Kafka UI
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    ports:
+      - "9080:8080"
+    networks:
+      - mynetwork
+    environment:
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: kafka:2181
+
+volumes:
+  bbdd:
+
+networks:
+  mynetwork:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 192.168.64.0/24
+
+
+
