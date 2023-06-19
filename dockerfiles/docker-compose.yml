@@ -1,21 +1,53 @@
 #https://hub.docker.com/repository/docker/amorenog9/dockerimagestfm/general
 version: '3'
 services:
-  kafkaandzookeeper:
-    container_name: kafka
-    image: amorenog9/dockerimagestfm:kafka
-    #build: kafkaandzookeeper/.
+  # Kafka
+  kafka:
+    image: bitnami/kafka:3.0.0
     ports:
-      - "5004:5004" 
+      - "9092:9092"
+      - "9093:9093"
+    environment:
+      KAFKA_CFG_ZOOKEEPER_CONNECT: zookeeper:2181
+      ALLOW_PLAINTEXT_LISTENER: "yes"
+      ADV_HOST: kafka
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: CLIENT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_CFG_LISTENERS: CLIENT://:9092,EXTERNAL://:9093
+      KAFKA_CFG_ADVERTISED_LISTENERS: CLIENT://kafka:9092,EXTERNAL://localhost:9093
+      KAFKA_INTER_BROKER_LISTENER_NAME: CLIENT
     networks:
       - mynetwork
+    depends_on:
+      - zookeeper
+
+  # Zookeeper
+  zookeeper:
+    image: bitnami/zookeeper:latest
+    ports:
+      - "2181:2181"
+    networks:
+      - mynetwork
+    environment:
+      ALLOW_ANONYMOUS_LOGIN: "yes"
+
+  kafkamanager:
+    container_name: kafkamanager
+    image: amorenog9/dockerimagestfm:kafkamanager
+    #build: kafkamanager/.
+    ports:
+      - "5008:5008"  
+    networks:
+      - mynetwork
+    depends_on:
+      - kafka
+      - zookeeper
 
   spark:
     #build: spark-master/.
     container_name: spark
     image: amorenog9/dockerimagestfm:sparkmaster    
     ports:
-      - "8080:8080" 
+      - "8080:8080" # Exponemos puerto 8080 para ver dashboard de spark en host
     volumes:
       - bbdd:/tmp/events
     networks:
@@ -58,7 +90,7 @@ services:
     networks:
       - mynetwork
     depends_on:
-      - kafkaandzookeeper
+      - kafka
   
   sparkwriter:
     container_name: sparkwriter
@@ -74,7 +106,7 @@ services:
     depends_on:
       - spark
       - flink
-      - kafkaandzookeeper
+      - kafka
   
   python:
     container_name: python
@@ -87,7 +119,7 @@ services:
     networks:
       - mynetwork
     depends_on:
-      - kafkaandzookeeper
+      - kafka
 
   sparkreader:
     container_name: sparkreader
@@ -111,9 +143,9 @@ services:
       - "3001:3001"
     networks:
       mynetwork:
-        ipv4_address: 192.168.64.17 
+        ipv4_address: 192.168.64.17 #necesario para fetch(http://noderserver:3001/mess...) => fetch(http://192.168.64.17:3001/mess...)
     depends_on:
-      - kafkaandzookeeper
+      - kafka
       - sparkreader
 
   dashboard:
@@ -137,7 +169,7 @@ services:
       mynetwork:
         ipv4_address: 192.168.64.20 # le ponemos una ip fija para dirigirnos directamente a la peticion curl
     depends_on:
-      - kafkaandzookeeper
+      - kafka
 
   # Kafka UI
   kafka-ui:
@@ -148,7 +180,7 @@ services:
       - mynetwork
     environment:
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
-      KAFKA_CLUSTERS_0_ZOOKEEPER: kafka:2181
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
 
 volumes:
   bbdd:
